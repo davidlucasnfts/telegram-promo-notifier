@@ -1,6 +1,7 @@
 # Uma palavra-chave por linha. Linhas com # são comentários.
 # Edite aqui ou mande /add <palavra> nas suas Mensagens Salvas.
-teclado mecanico
-cadeira ergometrica
-bicicleta ergometrica
-5700x
+/add teclado mecanico
+/add cadeira ergometrica
+/add bicicleta ergometrica
+/add 5700x
+/remove Cupom

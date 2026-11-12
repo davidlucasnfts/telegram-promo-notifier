@@ -177,11 +177,13 @@ async def monitor_handler(event):
 
 @user_client.on(events.NewMessage(pattern=r"^/(add|remover|listar|grupos|status)(\s|$)"))
 async def command_handler(event):
-    # comandos só valem na suas "Mensagens Salvas"
-    if not event.is_private or not event.out:
+    # comandos valem nas suas "Mensagens Salvas" ou no grupo de alertas (só seu)
+    if not event.out:
         return
+    chat = await event.get_chat()
     me = await user_client.get_me()
-    if (await event.get_chat()).id != me.id:
+    is_saved = event.is_private and chat.id == me.id
+    if not (is_saved or chat.id == TARGET_CHAT_ID):
         return
 
     cmd, _, arg = event.raw_text.partition(" ")
