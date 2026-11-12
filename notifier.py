@@ -177,13 +177,10 @@ async def monitor_handler(event):
 
 @user_client.on(events.NewMessage(pattern=r"^/(add|remover|listar|grupos|status)(\s|$)"))
 async def command_handler(event):
-    # comandos valem nas suas "Mensagens Salvas" ou no grupo de alertas (só seu)
+    # comandos funcionam SOMENTE no grupo de alertas (só seu, só você e o bot)
     if not event.out:
         return
-    chat = await event.get_chat()
-    me = await user_client.get_me()
-    is_saved = event.is_private and chat.id == me.id
-    if not (is_saved or chat.id == TARGET_CHAT_ID):
+    if (await event.get_chat()).id != TARGET_CHAT_ID:
         return
 
     cmd, _, arg = event.raw_text.partition(" ")
@@ -235,7 +232,7 @@ async def main():
     me = await user_client.get_me()
     print(f"✅ Conectado como {me.first_name} (@{me.username})")
     print(f"🔑 Palavras-chave: {len(load_keywords())}")
-    print("📡 Monitorando... (comandos em 'Mensagens Salvas')")
+    print("📡 Monitorando... (comandos SÓ no grupo de alertas) [v1.2]")
 
     await asyncio.gather(
         user_client.run_until_disconnected(),
