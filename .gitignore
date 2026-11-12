@@ -36,3 +36,6 @@ htmlcov/
 # Logs
 log.txt
 *.log
+
+# Prompt de retomada de sessao
+CONTINUAR_SESSAO.txt
