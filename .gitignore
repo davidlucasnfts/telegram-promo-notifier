@@ -1,5 +1,38 @@
+# Configurações e credenciais
 .env
+.env.local
+.env.*.local
+
+# Sessões do Telethon (equivalem a senha da conta)
 *.session
 *.session-journal
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+ENV/
+
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# Testes e cobertura
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Editores
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
 log.txt
+*.log
