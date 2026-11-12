@@ -97,6 +97,44 @@ user_client = TelegramClient(str(BASE_DIR / "user_session"), API_ID, API_HASH)
 bot_client = TelegramClient(str(BASE_DIR / "bot_session"), API_ID, API_HASH)
 
 
+def render_qr(url: str) -> None:
+    try:
+        import qrcode
+    except ImportError:
+        print("QR URL:", url)
+        return
+    qr = qrcode.QRCode(border=1)
+    qr.add_data(url)
+    qr.print_ascii(invert=True)
+
+
+async def ensure_user_authorized() -> None:
+    if await user_client.is_user_authorized():
+        return
+    # 1) tenta login interativo (quando roda num PC/terminal com teclado)
+    try:
+        await user_client.start()  # pede telefone + código via input()
+        return
+    except EOFError:
+        pass  # sem entrada interativa (ex.: console de workflow do Replit)
+    # 2) login por QR: aparece no console e é escaneado pelo app do celular
+    from telethon.errors import SessionPasswordNeededError
+    print("📱 Escaneie o QR abaixo com o Telegram do celular:")
+    print("   Configurações → Dispositivos → Conectar dispositivo")
+    qr = await user_client.qr_login()
+    while not await user_client.is_user_authorized():
+        render_qr(qr.url)
+        try:
+            await qr.wait(timeout=30)
+        except asyncio.TimeoutError:
+            await qr.recreate()  # QR expirou, gera outro
+        except SessionPasswordNeededError:
+            raise SystemExit(
+                "Sua conta tem verificação em 2 etapas (senha). "
+                "Rode uma vez num PC local para digitar a senha, ou desative-a temporariamente."
+            )
+
+
 async def send_alert(event, matches: list[str]) -> None:
     chat = await event.get_chat()
     title = getattr(chat, "title", None) or getattr(chat, "first_name", "grupo")
@@ -189,7 +227,7 @@ async def command_handler(event):
 # ---------------------------------------------------------------- main
 
 async def main():
-    await user_client.start()  # login com sua conta (1ª vez pede telefone + código)
+    await ensure_user_authorized()  # 1ª vez: telefone+código (PC) ou QR (Replit)
     await bot_client.start(bot_token=BOT_TOKEN)
 
     me = await user_client.get_me()
