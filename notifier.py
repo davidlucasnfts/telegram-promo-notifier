@@ -180,7 +180,21 @@ async def command_handler(event):
     # comandos funcionam SOMENTE no grupo de alertas (só seu, só você e o bot)
     if not event.out:
         return
-    if (await event.get_chat()).id != TARGET_CHAT_ID:
+    chat = await event.get_chat()
+    if chat.id != TARGET_CHAT_ID:
+        # diagnostico: avisa no proprio grupo qual é o ID dele (ajuda a corrigir o Secrets)
+        title = getattr(chat, "title", "sem título")
+        try:
+            await bot_client.send_message(
+                chat.id,
+                f"⚠️ Este chat não é o grupo de alertas configurado.\n"
+                f"📌 ID deste chat: <code>{chat.id}</code> ({title})\n"
+                f"⚙️ TARGET_CHAT_ID atual: <code>{TARGET_CHAT_ID}</code>\n"
+                f"Corrija o Secrets no Replit com o ID deste chat e reinicie.",
+                parse_mode="html",
+            )
+        except Exception as e:
+            print(f"⚠️ comando ignorado no chat {chat.id}: {e}")
         return
 
     cmd, _, arg = event.raw_text.partition(" ")
