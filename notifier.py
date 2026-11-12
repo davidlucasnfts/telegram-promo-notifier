@@ -96,6 +96,8 @@ def build_message_link(chat, msg_id: int) -> str:
 user_client = TelegramClient(str(BASE_DIR / "user_session"), API_ID, API_HASH)
 bot_client = TelegramClient(str(BASE_DIR / "bot_session"), API_ID, API_HASH)
 
+PAUSED = False  # /parar e /continuar controlam os alertas
+
 
 def render_qr(url: str) -> None:
     try:
@@ -164,6 +166,8 @@ async def monitor_handler(event):
     # só grupos/canais
     if not (event.is_group or event.is_channel):
         return
+    if PAUSED:
+        return
     chat = await event.get_chat()
     if MONITORED and chat.id not in MONITORED:
         return
@@ -175,7 +179,7 @@ async def monitor_handler(event):
         await send_alert(event, matches)
 
 
-@user_client.on(events.NewMessage(pattern=r"^/(add|remover|listar|grupos|status)(\s|$)"))
+@user_client.on(events.NewMessage(pattern=r"^/(add|remover|listar|grupos|status|parar|continuar)(\s|$)"))
 async def command_handler(event):
     # comandos funcionam SOMENTE no grupo de alertas (só seu, só você e o bot)
     if not event.out:
@@ -197,9 +201,19 @@ async def command_handler(event):
             print(f"⚠️ comando ignorado no chat {chat.id}: {e}")
         return
 
+    global PAUSED
     cmd, _, arg = event.raw_text.partition(" ")
     cmd = cmd.lstrip("/").lower()
     arg = arg.strip().lower()
+
+    if cmd == "parar":
+        PAUSED = True
+        await event.reply("⏸ Monitoramento PAUSADO. Nenhum alerta será enviado. Mande /continuar para retomar.")
+        return
+    if cmd == "continuar":
+        PAUSED = False
+        await event.reply("▶️ Monitoramento RETOMADO. Alertas ativos novamente.")
+        return
 
     if cmd == "add" and arg:
         kws = load_keywords()
